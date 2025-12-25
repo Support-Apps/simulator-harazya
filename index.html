@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סימולטור תודעתי ✨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fce4ec;
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        h1 {
+            color: #d4a574;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7cb69d;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(212, 165, 116, 0.2);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            border: 3px dashed #f8bbd9;
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fef7fa;
+        }
+
+        .upload-area:hover {
+            border-color: #d4a574;
+            background: #fff8f0;
+        }
+
+        .upload-area.has-image {
+            border-style: solid;
+            border-color: #7cb69d;
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #888;
+            font-size: 1em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .simulation-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .sim-btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sim-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .fat-burn-btn {
+            background: #f8bbd9;
+            color: #c0392b;
+            box-shadow: 0 5px 20px rgba(248, 187, 217, 0.4);
+        }
+
+        .fat-burn-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            background: #f48fb1;
+        }
+
+        .rejuvenate-btn {
+            background: #b2dfdb;
+            color: #16a085;
+            box-shadow: 0 5px 20px rgba(178, 223, 219, 0.4);
+        }
+
+        .rejuvenate-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            background: #80cbc4;
+        }
+
+        .save-btn {
+            background: #ffe0b2;
+            color: #e65100;
+            box-shadow: 0 5px 20px rgba(255, 224, 178, 0.4);
+        }
+
+        .save-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            background: #ffcc80;
+        }
+
+        .simulation-area {
+            background: white;
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(124, 182, 157, 0.2);
+            position: relative;
+        }
+
+        .sim-title {
+            text-align: center;
+            color: #d4a574;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 550px;
+            background: #fef9f9;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        #simulationCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .draggable-image {
+            position: absolute;
+            max-width: 180px;
+            max-height: 250px;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            cursor: move;
+            z-index: 10;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        /* Suction Machine */
+        .suction-machine {
+            position: absolute;
+            width: 100px;
+            height: 160px;
+            z-index: 8;
+            cursor: move;
+        }
+
+        .machine-body {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(180deg, #bdc3c7 0%, #95a5a6 50%, #7f8c8d 100%);
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .machine-screen {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 35px;
+            background: #1a1a2e;
+            border-radius: 5px;
+            border: 2px solid #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .machine-label {
+            position: absolute;
+            top: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: #2c3e50;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+
+        .machine-indicator {
+            position: absolute;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 16px;
+            background: #e74c3c;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #e74c3c;
+        }
+
+        .machine-indicator.active {
+            background: #2ecc71;
+            box-shadow: 0 0 15px #2ecc71;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.6; }
+        }
+
+        .machine-base {
+            width: 100%;
+            height: 25px;
+            background: #5d6d7e;
+            border-radius: 0 0 12px 12px;
+            margin-top: 5px;
+        }
+
+        .fat-container {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            z-index: 8;
+            cursor: move;
+        }
+
+        .container-body {
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            border: 3px solid #bdc3c7;
+            border-radius: 10px 10px 20px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fat-level {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0%;
+            background: linear-gradient(180deg, #ffeaa7 0%, #fdcb6e 50%, #f39c12 100%);
+            transition: height 0.3s;
+            border-radius: 0 0 17px 17px;
+        }
+
+        .container-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #7f8c8d;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* Real Fountain */
+        .fountain {
+            position: absolute;
+            width: 160px;
+            height: 220px;
+            z-index: 8;
+            cursor: move;
+        }
+
+        .fountain-pool {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 50px;
+            background: linear-gradient(180deg, #5dade2 0%, #3498db 100%);
+            border-radius: 50%;
+            box-shadow: inset 0 10px 30px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .fountain-pool::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 10%;
+            width: 80%;
+            height: 20px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+        }
+
+        .fountain-pool-rim {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 25px;
+            background: linear-gradient(180deg, #d4a574 0%, #a67c52 100%);
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .fountain-center {
+            position: absolute;
+            bottom: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 100px;
+            background: linear-gradient(90deg, #bdc3c7 0%, #ecf0f1 50%, #bdc3c7 100%);
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .fountain-top-bowl {
+            position: absolute;
+            bottom: 135px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 30px;
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+            border-radius: 50%;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .fountain-top-bowl::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 10%;
+            width: 80%;
+            height: 10px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+        }
+
+        .fountain-spout {
+            position: absolute;
+            bottom: 160px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 40px;
+            background: linear-gradient(90deg, #7f8c8d 0%, #95a5a6 50%, #7f8c8d 100%);
+            border-radius: 5px;
+        }
+
+        .water-jet {
+            position: absolute;
+            bottom: 195px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(135, 206, 250, 0.8) 50%, rgba(100, 200, 230, 0.6) 100%);
+            border-radius: 3px;
+            animation: waterJet 1s ease-out infinite;
+        }
+
+        @keyframes waterJet {
+            0% { height: 0; opacity: 1; }
+            50% { height: 50px; opacity: 1; }
+            100% { height: 70px; opacity: 0; }
+        }
+
+        .water-splash {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+        }
+
+        .splash-drop {
+            position: absolute;
+            width: 4px;
+            height: 8px;
+            background: rgba(135, 206, 250, 0.8);
+            border-radius: 50%;
+            animation: splash 1.5s ease-out infinite;
+        }
+
+        .splash-drop:nth-child(1) { left: 0; animation-delay: 0s; }
+        .splash-drop:nth-child(2) { left: 10px; animation-delay: 0.2s; }
+        .splash-drop:nth-child(3) { left: 20px; animation-delay: 0.1s; }
+        .splash-drop:nth-child(4) { left: 30px; animation-delay: 0.3s; }
+        .splash-drop:nth-child(5) { left: 36px; animation-delay: 0.15s; }
+
+        @keyframes splash {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-30px) scale(0.5); opacity: 0; }
+        }
+
+        .fountain-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #16a085;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* Draggable tube handles */
+        .tube-handle {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: #3498db;
+            border: 3px solid white;
+            border-radius: 50%;
+            cursor: grab;
+            z-index: 20;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+
+        .tube-handle:hover {
+            transform: scale(1.2);
+            background: #2980b9;
+        }
+
+        .tube-handle.dragging {
+            cursor: grabbing;
+            transform: scale(1.3);
+            background: #e74c3c;
+        }
+
+        .tube-handle.fountain-handle {
+            background: #1abc9c;
+        }
+
+        .tube-handle.fountain-handle:hover {
+            background: #16a085;
+        }
+
+        .tube-handle.fat-handle {
+            background: #e67e22;
+        }
+
+        .tube-handle.fat-handle:hover {
+            background: #d35400;
+        }
+
+        .tube-handle.fat-handle.dragging {
+            background: #c0392b;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            margin-top: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 12px;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .progress-fill.fat {
+            background: #f8bbd9;
+        }
+
+        .progress-fill.rejuvenate {
+            background: #b2dfdb;
+        }
+
+        .affirmation {
+            text-align: center;
+            font-size: 1.2em;
+            color: #7cb69d;
+            margin-top: 15px;
+            font-style: italic;
+            min-height: 50px;
+        }
+
+        .instructions-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+            padding: 10px;
+            background: #fff9e6;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .instructions-bar span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .reset-btn {
+            display: block;
+            margin: 15px auto 0;
+            padding: 10px 25px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1em;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: #e0e0e0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .mode-indicator {
+            text-align: center;
+            padding: 8px 15px;
+            background: #f8bbd9;
+            color: #c0392b;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+
+        .mode-indicator.rejuv {
+            background: #b2dfdb;
+            color: #16a085;
+        }
+
+        /* Saved Images Gallery */
+        .saved-gallery {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 10px 40px rgba(212, 165, 116, 0.2);
+        }
+
+        .gallery-title {
+            text-align: center;
+            color: #d4a574;
+            margin-bottom: 15px;
+        }
+
+        .gallery-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .gallery-item img {
+            max-width: 150px;
+            max-height: 200px;
+            display: block;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 28px;
+            height: 28px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .gallery-item-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px;
+            font-size: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ סימולטור תודעתי ✨</h1>
+            <p class="subtitle">גרור/י את הצינורות וחבר/י אותם לגוף</p>
+        </header>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📷</div>
+                <p class="upload-text">לחץ/י להעלאת תמונה</p>
+            </div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="simulation-buttons">
+            <button class="sim-btn fat-burn-btn" id="fatBurnBtn" disabled onclick="startFatMode()">
+                <span>🔥</span>
+                <span>שאיבת שומן</span>
+            </button>
+            <button class="sim-btn rejuvenate-btn" id="rejuvenateBtn" disabled onclick="startRejuvMode()">
+                <span>💧</span>
+                <span>מזרקת נעורים</span>
+            </button>
+            <button class="sim-btn save-btn" id="saveBtn" disabled onclick="saveImage()">
+                <span>💾</span>
+                <span>שמירה</span>
+            </button>
+        </div>
+
+        <div class="simulation-area">
+            <div style="text-align: center;">
+                <div class="mode-indicator hidden" id="modeIndicator">מצב שאיבת שומן</div>
+            </div>
+            
+            <div class="instructions-bar">
+                <span>🔵 גרור את העיגולים לחיבור הצינורות</span>
+                <span>📍 הזז את המכשירים והתמונה</span>
+                <span>▶️ לחץ "הפעל" להתחלה</span>
+            </div>
+
+            <div class="canvas-container" id="canvasContainer">
+                <svg id="simulationCanvas"></svg>
+                
+                <img class="draggable-image hidden" id="userImage" src="" alt="תמונה">
+                
+                <!-- Fat Simulation Elements -->
+                <div class="suction-machine hidden" id="suctionMachine">
+                    <div class="machine-body">
+                        <div class="machine-screen" id="machineScreen">0%</div>
+                        <div class="machine-label">LIPO-VAC</div>
+                        <div class="machine-indicator" id="machineIndicator"></div>
+                    </div>
+                    <div class="machine-base"></div>
+                </div>
+
+                <div class="fat-container hidden" id="fatContainer">
+                    <div class="container-body">
+                        <div class="fat-level" id="fatLevel"></div>
+                    </div>
+                    <div class="container-label">מיכל איסוף</div>
+                </div>
+
+                <!-- Real Fountain -->
+                <div class="fountain hidden" id="fountain">
+                    <div class="water-jet"></div>
+                    <div class="water-splash">
+                        <div class="splash-drop"></div>
+                        <div class="splash-drop"></div>
+                        <div class="splash-drop"></div>
+                        <div class="splash-drop"></div>
+                        <div class="splash-drop"></div>
+                    </div>
+                    <div class="fountain-spout"></div>
+                    <div class="fountain-top-bowl"></div>
+                    <div class="fountain-center"></div>
+                    <div class="fountain-pool-rim"></div>
+                    <div class="fountain-pool"></div>
+                    <div class="fountain-label">מזרקת הנעורים ✨</div>
+                </div>
+            </div>
+
+            <button class="sim-btn" id="startSimBtn" style="margin: 15px auto; display: none; background: #a8e6cf; color: #2d6a4f;" onclick="startSimulation()">
+                ▶️ התחל תהליך
+            </button>
+
+            <div class="progress-bar hidden" id="progressBar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <p class="affirmation hidden" id="affirmation"></p>
+            <button class="reset-btn hidden" id="resetBtn" onclick="resetAll()">🔄 התחל מחדש</button>
+        </div>
+
+        <!-- Saved Images Gallery -->
+        <div class="saved-gallery" id="savedGallery">
+            <h3 class="gallery-title hidden" id="galleryTitle">📸 תמונות שנשמרו</h3>
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+
+        <footer>
+            <p>✨ הכוח לשינוי נמצא בתוכך ✨</p>
+        </footer>
+    </div>
+
+    <script>
+        let uploadedImage = null;
+        let currentMode = null;
+        let animationInterval = null;
+        let isSimulating = false;
+        let tubes = [];
+        let activeHandle = null;
+
+        const fatAffirmations = [
+            "השומן נשאב החוצה מגופי בקלות",
+            "המכונה שואבת את כל השומן המיותר",
+            "הגוף שלי נהיה רזה וחטוב",
+            "כל שאיבה מקרבת אותי לגוף המושלם",
+            "השומן עוזב את גופי לתמיד",
+            "הבטן שלי נהיית שטוחה ומוצקה",
+            "הירכיים והמותניים מתחטבים",
+            "אני רואה את התוצאות בזמן אמת",
+            "הגוף שלי משתנה לנגד עיניי",
+            "אני נפרד/ת מהשומן העודף בשמחה"
+        ];
+
+        const rejuvAffirmations = [
+            "מי הנעורים זורמים אל פניי",
+            "העור שלי סופג את מי הנצח",
+            "הקמטים נמחקים ונעלמים",
+            "פניי מתמלאים בחיות ורעננות",
+            "כל טיפה מצעירה אותי בשנים",
+            "העור שלי נהיה זוהר וקורן",
+            "אני חוזרת לנעוריי",
+            "הפנים שלי משקפים נעורים נצחיים",
+            "מזרקת הנעורים עושה את הקסם",
+            "אני קורנת יופי ונעורים"
+        ];
+
+        const container = document.getElementById('canvasContainer');
+        const svg = document.getElementById('simulationCanvas');
+        const containerRect = () => container.getBoundingClientRect();
+
+        // File upload
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImage = e.target.result;
+                    document.getElementById('uploadArea').innerHTML = `
+                        <div class="upload-icon">✅</div>
+                        <p class="upload-text">תמונה הועלתה!</p>
+                    `;
+                    document.getElementById('uploadArea').classList.add('has-image');
+                    document.getElementById('fatBurnBtn').disabled = false;
+                    document.getElementById('rejuvenateBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function makeDraggable(element, onDrag) {
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            element.addEventListener('mousedown', (e) => {
+                if (isSimulating) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initialX = element.offsetLeft;
+                initialY = element.offsetTop;
+                element.style.zIndex = 100;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                element.style.left = (initialX + dx) + 'px';
+                element.style.top = (initialY + dy) + 'px';
+                if (onDrag) onDrag();
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    element.style.zIndex = '';
+                }
+            });
+        }
+
+        function createHandle(x, y, id, handleType = 'default') {
+            const handle = document.createElement('div');
+            let className = 'tube-handle';
+            if (handleType === 'fountain') className += ' fountain-handle';
+            else if (handleType === 'fat') className += ' fat-handle';
+            handle.className = className;
+            handle.id = id;
+            handle.style.left = (x - 12) + 'px';
+            handle.style.top = (y - 12) + 'px';
+            container.appendChild(handle);
+
+            let isDragging = false;
+
+            handle.addEventListener('mousedown', (e) => {
+                if (isSimulating) return;
+                isDragging = true;
+                handle.classList.add('dragging');
+                activeHandle = handle;
+                e.stopPropagation();
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || activeHandle !== handle) return;
+                const rect = containerRect();
+                const x = e.clientX - rect.left - 12;
+                const y = e.clientY - rect.top - 12;
+                handle.style.left = Math.max(0, Math.min(rect.width - 24, x)) + 'px';
+                handle.style.top = Math.max(0, Math.min(rect.height - 24, y)) + 'px';
+                updateTubes();
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging && activeHandle === handle) {
+                    isDragging = false;
+                    handle.classList.remove('dragging');
+                    activeHandle = null;
+                }
+            });
+
+            return handle;
+        }
+
+        function drawTube(x1, y1, x2, y2, id, color = '#3498db') {
+            let path = document.getElementById(id);
+            if (!path) {
+                path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.id = id;
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(path);
+            }
+
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const dist = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+            const curve = dist * 0.25;
+            
+            const d = `M ${x1} ${y1} Q ${midX} ${midY - curve} ${x2} ${y2}`;
+            path.setAttribute('d', d);
+            path.setAttribute('stroke', color);
+            path.setAttribute('stroke-width', '14');
+            
+            let highlight = document.getElementById(id + '-hl');
+            if (!highlight) {
+                highlight = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                highlight.id = id + '-hl';
+                highlight.setAttribute('fill', 'none');
+                highlight.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(highlight);
+            }
+            highlight.setAttribute('d', d);
+            highlight.setAttribute('stroke', 'rgba(255,255,255,0.4)');
+            highlight.setAttribute('stroke-width', '5');
+        }
+
+        function updateTubes() {
+            tubes.forEach(tube => {
+                const h1 = document.getElementById(tube.handle1);
+                const h2 = document.getElementById(tube.handle2);
+                if (h1 && h2) {
+                    const x1 = h1.offsetLeft + 12;
+                    const y1 = h1.offsetTop + 12;
+                    const x2 = h2.offsetLeft + 12;
+                    const y2 = h2.offsetTop + 12;
+                    drawTube(x1, y1, x2, y2, tube.id, tube.color);
+                }
+            });
+        }
+
+        function clearTubesAndHandles() {
+            document.querySelectorAll('.tube-handle').forEach(h => h.remove());
+            svg.innerHTML = '';
+            tubes = [];
+        }
+
+        function startFatMode() {
+            if (!uploadedImage) return;
+            currentMode = 'fat';
+            resetAll();
+
+            document.getElementById('userImage').classList.remove('hidden');
+            document.getElementById('userImage').src = uploadedImage;
+            document.getElementById('userImage').style.left = '400px';
+            document.getElementById('userImage').style.top = '150px';
+
+            document.getElementById('suctionMachine').classList.remove('hidden');
+            document.getElementById('suctionMachine').style.left = '30px';
+            document.getElementById('suctionMachine').style.top = '50px';
+
+            document.getElementById('fatContainer').classList.remove('hidden');
+            document.getElementById('fatContainer').style.left = '750px';
+            document.getElementById('fatContainer').style.top = '350px';
+
+            document.getElementById('modeIndicator').classList.remove('hidden');
+            document.getElementById('modeIndicator').textContent = '🔥 מצב שאיבת שומן';
+            document.getElementById('modeIndicator').className = 'mode-indicator';
+
+            document.getElementById('startSimBtn').style.display = 'flex';
+            document.getElementById('progressBar').classList.remove('hidden');
+            document.getElementById('progressFill').className = 'progress-fill fat';
+            document.getElementById('affirmation').classList.remove('hidden');
+            document.getElementById('resetBtn').classList.remove('hidden');
+
+            makeDraggable(document.getElementById('userImage'), updateTubes);
+            makeDraggable(document.getElementById('suctionMachine'), updateTubes);
+            makeDraggable(document.getElementById('fatContainer'), updateTubes);
+
+            // All 6 tubes - FIRST handle near body, SECOND handle near machine
+            // So particles flow from body (h1) to machine (h2)
+            createHandle(400, 160, 'fh1a', 'fat');  // body side
+            createHandle(110, 80, 'fh1b', 'fat');   // machine side
+            tubes.push({ id: 't1', handle1: 'fh1a', handle2: 'fh1b', color: '#e67e22' });
+
+            createHandle(400, 200, 'fh2a', 'fat');
+            createHandle(110, 100, 'fh2b', 'fat');
+            tubes.push({ id: 't2', handle1: 'fh2a', handle2: 'fh2b', color: '#e67e22' });
+
+            createHandle(400, 250, 'fh3a', 'fat');
+            createHandle(110, 120, 'fh3b', 'fat');
+            tubes.push({ id: 't3', handle1: 'fh3a', handle2: 'fh3b', color: '#e67e22' });
+
+            createHandle(400, 300, 'fh4a', 'fat');
+            createHandle(110, 140, 'fh4b', 'fat');
+            tubes.push({ id: 't4', handle1: 'fh4a', handle2: 'fh4b', color: '#e67e22' });
+
+            createHandle(400, 350, 'fh5a', 'fat');
+            createHandle(110, 160, 'fh5b', 'fat');
+            tubes.push({ id: 't5', handle1: 'fh5a', handle2: 'fh5b', color: '#e67e22' });
+
+            createHandle(400, 400, 'fh6a', 'fat');
+            createHandle(110, 180, 'fh6b', 'fat');
+            tubes.push({ id: 't6', handle1: 'fh6a', handle2: 'fh6b', color: '#e67e22' });
+
+            updateTubes();
+        }
+
+        function startRejuvMode() {
+            if (!uploadedImage) return;
+            currentMode = 'rejuv';
+            resetAll();
+
+            document.getElementById('userImage').classList.remove('hidden');
+            document.getElementById('userImage').src = uploadedImage;
+            document.getElementById('userImage').style.left = '550px';
+            document.getElementById('userImage').style.top = '100px';
+
+            document.getElementById('fountain').classList.remove('hidden');
+            document.getElementById('fountain').style.left = '80px';
+            document.getElementById('fountain').style.top = '280px';
+
+            document.getElementById('modeIndicator').classList.remove('hidden');
+            document.getElementById('modeIndicator').textContent = '💧 מצב מזרקת נעורים';
+            document.getElementById('modeIndicator').className = 'mode-indicator rejuv';
+
+            document.getElementById('startSimBtn').style.display = 'flex';
+            document.getElementById('progressBar').classList.remove('hidden');
+            document.getElementById('progressFill').className = 'progress-fill rejuvenate';
+            document.getElementById('affirmation').classList.remove('hidden');
+            document.getElementById('resetBtn').classList.remove('hidden');
+
+            makeDraggable(document.getElementById('userImage'), updateTubes);
+            makeDraggable(document.getElementById('fountain'), updateTubes);
+
+            // Fountain to face tubes
+            createHandle(160, 300, 'rh1a', 'fountain');
+            createHandle(560, 140, 'rh1b', 'fountain');
+            tubes.push({ id: 'rt1', handle1: 'rh1a', handle2: 'rh1b', color: '#1abc9c' });
+
+            createHandle(180, 340, 'rh2a', 'fountain');
+            createHandle(550, 200, 'rh2b', 'fountain');
+            tubes.push({ id: 'rt2', handle1: 'rh2a', handle2: 'rh2b', color: '#1abc9c' });
+
+            createHandle(200, 380, 'rh3a', 'fountain');
+            createHandle(560, 260, 'rh3b', 'fountain');
+            tubes.push({ id: 'rt3', handle1: 'rh3a', handle2: 'rh3b', color: '#1abc9c' });
+
+            createHandle(160, 420, 'rh4a', 'fountain');
+            createHandle(580, 180, 'rh4b', 'fountain');
+            tubes.push({ id: 'rt4', handle1: 'rh4a', handle2: 'rh4b', color: '#48c9b0' });
+
+            updateTubes();
+        }
+
+        function startSimulation() {
+            if (isSimulating) return;
+            isSimulating = true;
+            document.getElementById('startSimBtn').disabled = true;
+            document.getElementById('startSimBtn').textContent = '⏳ מעבד...';
+
+            if (currentMode === 'fat') {
+                runFatSimulation();
+            } else {
+                runRejuvSimulation();
+            }
+        }
+
+        function runFatSimulation() {
+            document.getElementById('machineIndicator').classList.add('active');
+
+            let progress = 0;
+            const progressFill = document.getElementById('progressFill');
+            const affirmation = document.getElementById('affirmation');
+            const fatLevel = document.getElementById('fatLevel');
+            const machineScreen = document.getElementById('machineScreen');
+            const userImage = document.getElementById('userImage');
+
+            affirmation.textContent = fatAffirmations[0];
+
+            animationInterval = setInterval(() => createParticle('fat'), 100);
+
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+                fatLevel.style.height = Math.min(progress * 0.8, 80) + '%';
+                machineScreen.textContent = progress + '%';
+
+                if (progress % 10 === 0) {
+                    affirmation.textContent = fatAffirmations[Math.floor(progress / 10) % fatAffirmations.length];
+                }
+
+                if (progress > 30) {
+                    userImage.style.transform = `scaleX(${Math.max(1 - (progress - 30) * 0.0025, 0.85)})`;
+                }
+
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    clearInterval(animationInterval);
+                    document.getElementById('machineIndicator').classList.remove('active');
+                    affirmation.textContent = '🎉 שאיבת השומן הושלמה בהצלחה! 🎉';
+                    userImage.style.boxShadow = '0 0 30px rgba(212, 165, 116, 0.8)';
+                    document.getElementById('saveBtn').disabled = false;
+                    document.getElementById('startSimBtn').textContent = '✅ הושלם';
+                    isSimulating = false;
+                }
+            }, 80);
+        }
+
+        function runRejuvSimulation() {
+            let progress = 0;
+            const progressFill = document.getElementById('progressFill');
+            const affirmation = document.getElementById('affirmation');
+            const userImage = document.getElementById('userImage');
+
+            affirmation.textContent = rejuvAffirmations[0];
+
+            animationInterval = setInterval(() => createParticle('rejuv'), 80);
+
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+
+                if (progress % 10 === 0) {
+                    affirmation.textContent = rejuvAffirmations[Math.floor(progress / 10) % rejuvAffirmations.length];
+                }
+
+                userImage.style.filter = `brightness(${100 + progress * 0.25}%)`;
+
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    clearInterval(animationInterval);
+                    affirmation.textContent = '🎉 הפנים שלך קורנים באור חדש! 🎉';
+                    userImage.style.boxShadow = '0 0 40px rgba(100, 200, 230, 0.8)';
+                    document.getElementById('saveBtn').disabled = false;
+                    document.getElementById('startSimBtn').textContent = '✅ הושלם';
+                    isSimulating = false;
+                }
+            }, 80);
+        }
+
+        function createParticle(type) {
+            const tubeIndex = Math.floor(Math.random() * tubes.length);
+            const tube = tubes[tubeIndex];
+            const h1 = document.getElementById(tube.handle1);
+            const h2 = document.getElementById(tube.handle2);
+            if (!h1 || !h2) return;
+
+            const particle = document.createElement('div');
+            const isFat = type === 'fat';
+            
+            // Fat particles: yellow/orange fatty color
+            particle.style.cssText = `
+                position: absolute;
+                width: ${isFat ? '14px' : '8px'};
+                height: ${isFat ? '14px' : '12px'};
+                background: ${isFat ? 'radial-gradient(circle, #fff3cd, #ffc107, #ff9800)' : 'radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.9), rgba(100, 200, 230, 0.8))'};
+                border-radius: 50%;
+                z-index: 15;
+                pointer-events: none;
+                box-shadow: ${isFat ? '0 2px 8px rgba(255, 152, 0, 0.5)' : '0 2px 5px rgba(0,0,0,0.2)'};
+            `;
+
+            // For fat: h1 is body side, h2 is machine side - suction goes body->machine
+            // For rejuv: h1 is fountain, h2 is face - water goes fountain->face
+            // Both cases: start from h1, end at h2
+            const x1 = h1.offsetLeft + 12;
+            const y1 = h1.offsetTop + 12;
+            const x2 = h2.offsetLeft + 12;
+            const y2 = h2.offsetTop + 12;
+
+            particle.style.left = x1 + 'px';
+            particle.style.top = y1 + 'px';
+            container.appendChild(particle);
+
+            let t = 0;
+            const dist = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+            const curve = dist * 0.25;
+
+            const moveInterval = setInterval(() => {
+                t += 0.03;
+                if (t >= 1) {
+                    clearInterval(moveInterval);
+                    particle.style.opacity = '0';
+                    setTimeout(() => particle.remove(), 200);
+                    return;
+                }
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2 - curve;
+                
+                // Quadratic bezier
+                const x = (1-t)*(1-t)*x1 + 2*(1-t)*t*midX + t*t*x2;
+                const y = (1-t)*(1-t)*y1 + 2*(1-t)*t*midY + t*t*y2;
+                
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+            }, 20);
+        }
+
+        function resetAll() {
+            clearInterval(animationInterval);
+            isSimulating = false;
+            clearTubesAndHandles();
+
+            ['userImage', 'suctionMachine', 'fatContainer', 'fountain'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('hidden');
+                el.style.transform = '';
+                el.style.filter = '';
+                el.style.boxShadow = '';
+            });
+
+            document.getElementById('modeIndicator').classList.add('hidden');
+            document.getElementById('startSimBtn').style.display = 'none';
+            document.getElementById('startSimBtn').disabled = false;
+            document.getElementById('startSimBtn').textContent = '▶️ התחל תהליך';
+
+            document.getElementById('progressBar').classList.add('hidden');
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressFill').textContent = '0%';
+
+            document.getElementById('fatLevel').style.height = '0%';
+            document.getElementById('machineScreen').textContent = '0%';
+            document.getElementById('machineIndicator').classList.remove('active');
+
+            document.getElementById('affirmation').classList.add('hidden');
+            document.getElementById('affirmation').textContent = '';
+            document.getElementById('resetBtn').classList.add('hidden');
+            document.getElementById('saveBtn').disabled = true;
+
+            container.querySelectorAll('div[style*="radial-gradient"]').forEach(p => {
+                if (!p.classList.contains('tube-handle')) p.remove();
+            });
+
+            currentMode = null;
+        }
+
+        function saveImage() {
+            const img = document.getElementById('userImage');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = function() {
+                canvas.width = tempImg.width;
+                canvas.height = tempImg.height;
+                ctx.filter = window.getComputedStyle(img).filter;
+
+                if (currentMode === 'fat') {
+                    const transform = window.getComputedStyle(img).transform;
+                    if (transform !== 'none') {
+                        const match = transform.match(/matrix\(([^,]+)/);
+                        if (match) {
+                            const scaleX = parseFloat(match[1]);
+                            ctx.translate((tempImg.width - tempImg.width * scaleX) / 2, 0);
+                            ctx.scale(scaleX, 1);
+                        }
+                    }
+                }
+
+                ctx.drawImage(tempImg, 0, 0);
+                
+                // Add to gallery
+                addToGallery(canvas.toDataURL('image/png'), currentMode);
+            };
+            tempImg.src = img.src;
+        }
+
+        function addToGallery(dataUrl, mode) {
+            const gallery = document.getElementById('galleryGrid');
+            const galleryTitle = document.getElementById('galleryTitle');
+            
+            galleryTitle.classList.remove('hidden');
+            
+            const itemId = 'img-' + Date.now();
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+            item.id = itemId;
+            
+            const modeText = mode === 'fat' ? '🔥 שאיבת שומן' : '💧 מזרקת נעורים';
+            const time = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+            
+            item.innerHTML = `
+                <img src="${dataUrl}" alt="תמונה שנשמרה">
+                <button class="delete-btn" onclick="deleteFromGallery('${itemId}')">✕</button>
+                <div class="gallery-item-info">${modeText} | ${time}</div>
+            `;
+            
+            // Add click to download
+            item.querySelector('img').addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.download = `consciousness-${mode}-${Date.now()}.png`;
+                link.href = dataUrl;
+                link.click();
+            });
+            item.querySelector('img').style.cursor = 'pointer';
+            item.querySelector('img').title = 'לחץ להורדה';
+            
+            gallery.appendChild(item);
+        }
+
+        function deleteFromGallery(itemId) {
+            const item = document.getElementById(itemId);
+            if (item) {
+                item.style.transition = 'all 0.3s';
+                item.style.transform = 'scale(0)';
+                item.style.opacity = '0';
+                setTimeout(() => {
+                    item.remove();
+                    // Hide title if no images left
+                    const gallery = document.getElementById('galleryGrid');
+                    if (gallery.children.length === 0) {
+                        document.getElementById('galleryTitle').classList.add('hidden');
+                    }
+                }, 300);
+            }
+        }
+    </script>
+</body>
+</html>
