@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>סימולטור תודעתי ✨</title>
     <style>
         * {
@@ -164,6 +164,7 @@
             background: #fef9f9;
             border-radius: 15px;
             overflow: hidden;
+            touch-action: none;
         }
 
         #simulationCanvas {
@@ -185,6 +186,7 @@
             cursor: move;
             z-index: 10;
             transition: transform 0.3s, box-shadow 0.3s;
+            touch-action: none;
         }
 
         /* Suction Machine */
@@ -194,6 +196,7 @@
             height: 160px;
             z-index: 8;
             cursor: move;
+            touch-action: none;
         }
 
         .machine-body {
@@ -272,6 +275,7 @@
             height: 100px;
             z-index: 8;
             cursor: move;
+            touch-action: none;
         }
 
         .container-body {
@@ -313,6 +317,7 @@
             height: 220px;
             z-index: 8;
             cursor: move;
+            touch-action: none;
         }
 
         .fountain-pool {
@@ -466,6 +471,7 @@
             z-index: 20;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             transition: transform 0.1s;
+            touch-action: none;
         }
 
         .tube-handle:hover {
@@ -673,6 +679,179 @@
             font-size: 10px;
             text-align: center;
         }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.6em;
+            }
+
+            .subtitle {
+                font-size: 0.95em;
+            }
+
+            .upload-section {
+                padding: 15px;
+                border-radius: 15px;
+            }
+
+            .upload-area {
+                padding: 20px;
+            }
+
+            .upload-icon {
+                font-size: 40px;
+            }
+
+            .simulation-buttons {
+                gap: 10px;
+            }
+
+            .sim-btn {
+                padding: 12px 20px;
+                font-size: 0.95em;
+            }
+
+            .simulation-area {
+                padding: 15px;
+                border-radius: 15px;
+            }
+
+            .instructions-bar {
+                flex-direction: column;
+                gap: 8px;
+                font-size: 0.8em;
+                padding: 8px;
+            }
+
+            .canvas-container {
+                height: 450px;
+                overflow: visible;
+            }
+
+            .draggable-image {
+                max-width: 120px;
+                max-height: 180px;
+            }
+
+            .suction-machine {
+                width: 70px;
+                height: 120px;
+                transform: scale(0.8);
+            }
+
+            .machine-body {
+                height: 90px;
+            }
+
+            .machine-screen {
+                width: 45px;
+                height: 28px;
+                font-size: 10px;
+            }
+
+            .machine-label {
+                font-size: 6px;
+                top: 45px;
+            }
+
+            .machine-indicator {
+                width: 12px;
+                height: 12px;
+                top: 60px;
+            }
+
+            .fat-container {
+                width: 60px;
+                height: 80px;
+            }
+
+            .fountain {
+                width: 120px;
+                height: 180px;
+                transform: scale(0.75);
+            }
+
+            .tube-handle {
+                width: 20px;
+                height: 20px;
+            }
+
+            .progress-bar {
+                height: 22px;
+            }
+
+            .affirmation {
+                font-size: 1em;
+                min-height: 40px;
+            }
+
+            .gallery-item img {
+                max-width: 100px;
+                max-height: 140px;
+            }
+
+            .mode-indicator {
+                font-size: 0.9em;
+                padding: 6px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.4em;
+            }
+
+            .sim-btn {
+                padding: 10px 15px;
+                font-size: 0.85em;
+                flex: 1;
+                justify-content: center;
+                min-width: 100px;
+            }
+
+            .sim-btn span:last-child {
+                display: none;
+            }
+
+            .sim-btn::after {
+                content: attr(data-short);
+            }
+
+            .canvas-container {
+                height: 400px;
+            }
+
+            .draggable-image {
+                max-width: 100px;
+                max-height: 150px;
+            }
+
+            .suction-machine {
+                transform: scale(0.65);
+            }
+
+            .fountain {
+                transform: scale(0.6);
+            }
+
+            .tube-handle {
+                width: 18px;
+                height: 18px;
+            }
+
+            .affirmation {
+                font-size: 0.9em;
+            }
+
+            .instructions-bar {
+                font-size: 0.75em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -840,6 +1019,7 @@
             let isDragging = false;
             let startX, startY, initialX, initialY;
 
+            // Mouse events
             element.addEventListener('mousedown', (e) => {
                 if (isSimulating) return;
                 isDragging = true;
@@ -866,6 +1046,36 @@
                     element.style.zIndex = '';
                 }
             });
+
+            // Touch events
+            element.addEventListener('touchstart', (e) => {
+                if (isSimulating) return;
+                isDragging = true;
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                initialX = element.offsetLeft;
+                initialY = element.offsetTop;
+                element.style.zIndex = 100;
+                e.preventDefault();
+            }, { passive: false });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                const touch = e.touches[0];
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
+                element.style.left = (initialX + dx) + 'px';
+                element.style.top = (initialY + dy) + 'px';
+                if (onDrag) onDrag();
+            }, { passive: false });
+
+            document.addEventListener('touchend', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    element.style.zIndex = '';
+                }
+            });
         }
 
         function createHandle(x, y, id, handleType = 'default') {
@@ -881,6 +1091,7 @@
 
             let isDragging = false;
 
+            // Mouse events
             handle.addEventListener('mousedown', (e) => {
                 if (isSimulating) return;
                 isDragging = true;
@@ -901,6 +1112,35 @@
             });
 
             document.addEventListener('mouseup', () => {
+                if (isDragging && activeHandle === handle) {
+                    isDragging = false;
+                    handle.classList.remove('dragging');
+                    activeHandle = null;
+                }
+            });
+
+            // Touch events
+            handle.addEventListener('touchstart', (e) => {
+                if (isSimulating) return;
+                isDragging = true;
+                handle.classList.add('dragging');
+                activeHandle = handle;
+                e.stopPropagation();
+                e.preventDefault();
+            }, { passive: false });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging || activeHandle !== handle) return;
+                const touch = e.touches[0];
+                const rect = containerRect();
+                const x = touch.clientX - rect.left - 12;
+                const y = touch.clientY - rect.top - 12;
+                handle.style.left = Math.max(0, Math.min(rect.width - 24, x)) + 'px';
+                handle.style.top = Math.max(0, Math.min(rect.height - 24, y)) + 'px';
+                updateTubes();
+            }, { passive: false });
+
+            document.addEventListener('touchend', () => {
                 if (isDragging && activeHandle === handle) {
                     isDragging = false;
                     handle.classList.remove('dragging');
@@ -969,18 +1209,31 @@
             currentMode = 'fat';
             resetAll();
 
+            const isMobile = window.innerWidth <= 768;
+            const isSmallMobile = window.innerWidth <= 480;
+
             document.getElementById('userImage').classList.remove('hidden');
             document.getElementById('userImage').src = uploadedImage;
-            document.getElementById('userImage').style.left = '400px';
-            document.getElementById('userImage').style.top = '150px';
+            
+            // Position based on screen size
+            if (isSmallMobile) {
+                document.getElementById('userImage').style.left = '140px';
+                document.getElementById('userImage').style.top = '120px';
+            } else if (isMobile) {
+                document.getElementById('userImage').style.left = '200px';
+                document.getElementById('userImage').style.top = '130px';
+            } else {
+                document.getElementById('userImage').style.left = '400px';
+                document.getElementById('userImage').style.top = '150px';
+            }
 
             document.getElementById('suctionMachine').classList.remove('hidden');
-            document.getElementById('suctionMachine').style.left = '30px';
-            document.getElementById('suctionMachine').style.top = '50px';
+            document.getElementById('suctionMachine').style.left = isMobile ? '10px' : '30px';
+            document.getElementById('suctionMachine').style.top = isMobile ? '30px' : '50px';
 
             document.getElementById('fatContainer').classList.remove('hidden');
-            document.getElementById('fatContainer').style.left = '750px';
-            document.getElementById('fatContainer').style.top = '350px';
+            document.getElementById('fatContainer').style.left = isMobile ? '280px' : '750px';
+            document.getElementById('fatContainer').style.top = isMobile ? '320px' : '350px';
 
             document.getElementById('modeIndicator').classList.remove('hidden');
             document.getElementById('modeIndicator').textContent = '🔥 מצב שאיבת שומן';
@@ -996,30 +1249,37 @@
             makeDraggable(document.getElementById('suctionMachine'), updateTubes);
             makeDraggable(document.getElementById('fatContainer'), updateTubes);
 
+            // Adjust tube positions for screen size
+            const machineX = isMobile ? 60 : 110;
+            const bodyX = isMobile ? (isSmallMobile ? 140 : 200) : 400;
+            const startY = isMobile ? 60 : 80;
+            const gapY = isMobile ? 15 : 20;
+            const bodyStartY = isMobile ? 130 : 160;
+            const bodyGapY = isMobile ? 35 : 48;
+
             // All 6 tubes - FIRST handle near body, SECOND handle near machine
-            // So particles flow from body (h1) to machine (h2)
-            createHandle(400, 160, 'fh1a', 'fat');  // body side
-            createHandle(110, 80, 'fh1b', 'fat');   // machine side
+            createHandle(bodyX, bodyStartY, 'fh1a', 'fat');
+            createHandle(machineX, startY, 'fh1b', 'fat');
             tubes.push({ id: 't1', handle1: 'fh1a', handle2: 'fh1b', color: '#e67e22' });
 
-            createHandle(400, 200, 'fh2a', 'fat');
-            createHandle(110, 100, 'fh2b', 'fat');
+            createHandle(bodyX, bodyStartY + bodyGapY, 'fh2a', 'fat');
+            createHandle(machineX, startY + gapY, 'fh2b', 'fat');
             tubes.push({ id: 't2', handle1: 'fh2a', handle2: 'fh2b', color: '#e67e22' });
 
-            createHandle(400, 250, 'fh3a', 'fat');
-            createHandle(110, 120, 'fh3b', 'fat');
+            createHandle(bodyX, bodyStartY + bodyGapY * 2, 'fh3a', 'fat');
+            createHandle(machineX, startY + gapY * 2, 'fh3b', 'fat');
             tubes.push({ id: 't3', handle1: 'fh3a', handle2: 'fh3b', color: '#e67e22' });
 
-            createHandle(400, 300, 'fh4a', 'fat');
-            createHandle(110, 140, 'fh4b', 'fat');
+            createHandle(bodyX, bodyStartY + bodyGapY * 3, 'fh4a', 'fat');
+            createHandle(machineX, startY + gapY * 3, 'fh4b', 'fat');
             tubes.push({ id: 't4', handle1: 'fh4a', handle2: 'fh4b', color: '#e67e22' });
 
-            createHandle(400, 350, 'fh5a', 'fat');
-            createHandle(110, 160, 'fh5b', 'fat');
+            createHandle(bodyX, bodyStartY + bodyGapY * 4, 'fh5a', 'fat');
+            createHandle(machineX, startY + gapY * 4, 'fh5b', 'fat');
             tubes.push({ id: 't5', handle1: 'fh5a', handle2: 'fh5b', color: '#e67e22' });
 
-            createHandle(400, 400, 'fh6a', 'fat');
-            createHandle(110, 180, 'fh6b', 'fat');
+            createHandle(bodyX, bodyStartY + bodyGapY * 5, 'fh6a', 'fat');
+            createHandle(machineX, startY + gapY * 5, 'fh6b', 'fat');
             tubes.push({ id: 't6', handle1: 'fh6a', handle2: 'fh6b', color: '#e67e22' });
 
             updateTubes();
@@ -1030,14 +1290,27 @@
             currentMode = 'rejuv';
             resetAll();
 
+            const isMobile = window.innerWidth <= 768;
+            const isSmallMobile = window.innerWidth <= 480;
+
             document.getElementById('userImage').classList.remove('hidden');
             document.getElementById('userImage').src = uploadedImage;
-            document.getElementById('userImage').style.left = '550px';
-            document.getElementById('userImage').style.top = '100px';
+            
+            // Position based on screen size
+            if (isSmallMobile) {
+                document.getElementById('userImage').style.left = '180px';
+                document.getElementById('userImage').style.top = '80px';
+            } else if (isMobile) {
+                document.getElementById('userImage').style.left = '280px';
+                document.getElementById('userImage').style.top = '80px';
+            } else {
+                document.getElementById('userImage').style.left = '550px';
+                document.getElementById('userImage').style.top = '100px';
+            }
 
             document.getElementById('fountain').classList.remove('hidden');
-            document.getElementById('fountain').style.left = '80px';
-            document.getElementById('fountain').style.top = '280px';
+            document.getElementById('fountain').style.left = isMobile ? '20px' : '80px';
+            document.getElementById('fountain').style.top = isMobile ? '200px' : '280px';
 
             document.getElementById('modeIndicator').classList.remove('hidden');
             document.getElementById('modeIndicator').textContent = '💧 מצב מזרקת נעורים';
@@ -1052,21 +1325,27 @@
             makeDraggable(document.getElementById('userImage'), updateTubes);
             makeDraggable(document.getElementById('fountain'), updateTubes);
 
+            // Adjust tube positions for screen size
+            const fountainX = isMobile ? 80 : 160;
+            const faceX = isMobile ? (isSmallMobile ? 180 : 280) : 560;
+            const fountainStartY = isMobile ? 220 : 300;
+            const faceStartY = isMobile ? 100 : 140;
+
             // Fountain to face tubes
-            createHandle(160, 300, 'rh1a', 'fountain');
-            createHandle(560, 140, 'rh1b', 'fountain');
+            createHandle(fountainX, fountainStartY, 'rh1a', 'fountain');
+            createHandle(faceX, faceStartY, 'rh1b', 'fountain');
             tubes.push({ id: 'rt1', handle1: 'rh1a', handle2: 'rh1b', color: '#1abc9c' });
 
-            createHandle(180, 340, 'rh2a', 'fountain');
-            createHandle(550, 200, 'rh2b', 'fountain');
+            createHandle(fountainX + 20, fountainStartY + 40, 'rh2a', 'fountain');
+            createHandle(faceX - 10, faceStartY + 60, 'rh2b', 'fountain');
             tubes.push({ id: 'rt2', handle1: 'rh2a', handle2: 'rh2b', color: '#1abc9c' });
 
-            createHandle(200, 380, 'rh3a', 'fountain');
-            createHandle(560, 260, 'rh3b', 'fountain');
+            createHandle(fountainX + 40, fountainStartY + 80, 'rh3a', 'fountain');
+            createHandle(faceX + 10, faceStartY + 120, 'rh3b', 'fountain');
             tubes.push({ id: 'rt3', handle1: 'rh3a', handle2: 'rh3b', color: '#1abc9c' });
 
-            createHandle(160, 420, 'rh4a', 'fountain');
-            createHandle(580, 180, 'rh4b', 'fountain');
+            createHandle(fountainX, fountainStartY + 120, 'rh4a', 'fountain');
+            createHandle(faceX + 20, faceStartY + 40, 'rh4b', 'fountain');
             tubes.push({ id: 'rt4', handle1: 'rh4a', handle2: 'rh4b', color: '#48c9b0' });
 
             updateTubes();
