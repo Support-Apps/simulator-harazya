@@ -101,7 +101,8 @@
             font-family: inherit;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            white-space: nowrap;
         }
 
         .sim-btn:disabled {
@@ -281,11 +282,12 @@
         .container-body {
             width: 100%;
             height: 100%;
-            background: rgba(255,255,255,0.9);
-            border: 3px solid #bdc3c7;
+            background: rgba(255,255,255,0.95);
+            border: 3px solid #95a5a6;
             border-radius: 10px 10px 20px 20px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .fat-level {
@@ -293,19 +295,21 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 0%;
-            background: linear-gradient(180deg, #ffeaa7 0%, #fdcb6e 50%, #f39c12 100%);
-            transition: height 0.3s;
+            width: 100%;
+            height: 0;
+            background: #e67e22;
+            transition: height 0.5s ease-out;
             border-radius: 0 0 17px 17px;
+            z-index: 1;
         }
 
         .container-label {
             position: absolute;
-            bottom: -20px;
+            bottom: -22px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 10px;
-            color: #7f8c8d;
+            color: #e67e22;
             font-weight: bold;
             white-space: nowrap;
         }
@@ -709,11 +713,15 @@
 
             .simulation-buttons {
                 gap: 10px;
+                flex-direction: column;
+                align-items: center;
             }
 
             .sim-btn {
                 padding: 12px 20px;
                 font-size: 0.95em;
+                width: 100%;
+                max-width: 250px;
             }
 
             .simulation-area {
@@ -809,17 +817,7 @@
             .sim-btn {
                 padding: 10px 15px;
                 font-size: 0.85em;
-                flex: 1;
                 justify-content: center;
-                min-width: 100px;
-            }
-
-            .sim-btn span:last-child {
-                display: none;
-            }
-
-            .sim-btn::after {
-                content: attr(data-short);
             }
 
             .canvas-container {
@@ -1206,8 +1204,8 @@
 
         function startFatMode() {
             if (!uploadedImage) return;
-            currentMode = 'fat';
             resetAll();
+            currentMode = 'fat';
 
             const isMobile = window.innerWidth <= 768;
             const isSmallMobile = window.innerWidth <= 480;
@@ -1215,25 +1213,27 @@
             document.getElementById('userImage').classList.remove('hidden');
             document.getElementById('userImage').src = uploadedImage;
             
-            // Position based on screen size
+            // Position image on the right side
             if (isSmallMobile) {
-                document.getElementById('userImage').style.left = '140px';
+                document.getElementById('userImage').style.left = '180px';
                 document.getElementById('userImage').style.top = '120px';
             } else if (isMobile) {
-                document.getElementById('userImage').style.left = '200px';
+                document.getElementById('userImage').style.left = '280px';
                 document.getElementById('userImage').style.top = '130px';
             } else {
-                document.getElementById('userImage').style.left = '400px';
-                document.getElementById('userImage').style.top = '150px';
+                document.getElementById('userImage').style.left = '500px';
+                document.getElementById('userImage').style.top = '120px';
             }
 
+            // Machine on the left
             document.getElementById('suctionMachine').classList.remove('hidden');
             document.getElementById('suctionMachine').style.left = isMobile ? '10px' : '30px';
             document.getElementById('suctionMachine').style.top = isMobile ? '30px' : '50px';
 
+            // Container next to machine (to the right)
             document.getElementById('fatContainer').classList.remove('hidden');
-            document.getElementById('fatContainer').style.left = isMobile ? '280px' : '750px';
-            document.getElementById('fatContainer').style.top = isMobile ? '320px' : '350px';
+            document.getElementById('fatContainer').style.left = isMobile ? '120px' : '170px';
+            document.getElementById('fatContainer').style.top = isMobile ? '40px' : '60px';
 
             document.getElementById('modeIndicator').classList.remove('hidden');
             document.getElementById('modeIndicator').textContent = '🔥 מצב שאיבת שומן';
@@ -1243,52 +1243,59 @@
             document.getElementById('progressBar').classList.remove('hidden');
             document.getElementById('progressFill').className = 'progress-fill fat';
             document.getElementById('affirmation').classList.remove('hidden');
+            document.getElementById('affirmation').textContent = fatAffirmations[0];
             document.getElementById('resetBtn').classList.remove('hidden');
 
             makeDraggable(document.getElementById('userImage'), updateTubes);
             makeDraggable(document.getElementById('suctionMachine'), updateTubes);
             makeDraggable(document.getElementById('fatContainer'), updateTubes);
 
-            // Adjust tube positions for screen size
-            const machineX = isMobile ? 60 : 110;
-            const bodyX = isMobile ? (isSmallMobile ? 140 : 200) : 400;
-            const startY = isMobile ? 60 : 80;
-            const gapY = isMobile ? 15 : 20;
-            const bodyStartY = isMobile ? 130 : 160;
-            const bodyGapY = isMobile ? 35 : 48;
+            // Positions based on screen size
+            const machineX = isMobile ? 70 : 110;
+            const bodyX = isMobile ? (isSmallMobile ? 180 : 280) : 500;
+            const containerX = isMobile ? 130 : 180;
+            
+            // 6 tubes from BODY to MACHINE (suction - blue tubes)
+            createHandle(bodyX, isMobile ? 130 : 140, 'fh1a', 'fat');
+            createHandle(machineX, isMobile ? 70 : 100, 'fh1b', 'fat');
+            tubes.push({ id: 't1', handle1: 'fh1a', handle2: 'fh1b', color: '#3498db', type: 'suction' });
 
-            // All 6 tubes - FIRST handle near body, SECOND handle near machine
-            createHandle(bodyX, bodyStartY, 'fh1a', 'fat');
-            createHandle(machineX, startY, 'fh1b', 'fat');
-            tubes.push({ id: 't1', handle1: 'fh1a', handle2: 'fh1b', color: '#e67e22' });
+            createHandle(bodyX, isMobile ? 160 : 180, 'fh2a', 'fat');
+            createHandle(machineX, isMobile ? 85 : 120, 'fh2b', 'fat');
+            tubes.push({ id: 't2', handle1: 'fh2a', handle2: 'fh2b', color: '#3498db', type: 'suction' });
 
-            createHandle(bodyX, bodyStartY + bodyGapY, 'fh2a', 'fat');
-            createHandle(machineX, startY + gapY, 'fh2b', 'fat');
-            tubes.push({ id: 't2', handle1: 'fh2a', handle2: 'fh2b', color: '#e67e22' });
+            createHandle(bodyX, isMobile ? 190 : 220, 'fh3a', 'fat');
+            createHandle(machineX, isMobile ? 100 : 140, 'fh3b', 'fat');
+            tubes.push({ id: 't3', handle1: 'fh3a', handle2: 'fh3b', color: '#3498db', type: 'suction' });
 
-            createHandle(bodyX, bodyStartY + bodyGapY * 2, 'fh3a', 'fat');
-            createHandle(machineX, startY + gapY * 2, 'fh3b', 'fat');
-            tubes.push({ id: 't3', handle1: 'fh3a', handle2: 'fh3b', color: '#e67e22' });
+            createHandle(bodyX, isMobile ? 220 : 260, 'fh4a', 'fat');
+            createHandle(machineX, isMobile ? 115 : 160, 'fh4b', 'fat');
+            tubes.push({ id: 't4', handle1: 'fh4a', handle2: 'fh4b', color: '#3498db', type: 'suction' });
 
-            createHandle(bodyX, bodyStartY + bodyGapY * 3, 'fh4a', 'fat');
-            createHandle(machineX, startY + gapY * 3, 'fh4b', 'fat');
-            tubes.push({ id: 't4', handle1: 'fh4a', handle2: 'fh4b', color: '#e67e22' });
+            createHandle(bodyX, isMobile ? 250 : 300, 'fh5a', 'fat');
+            createHandle(machineX, isMobile ? 130 : 180, 'fh5b', 'fat');
+            tubes.push({ id: 't5', handle1: 'fh5a', handle2: 'fh5b', color: '#3498db', type: 'suction' });
 
-            createHandle(bodyX, bodyStartY + bodyGapY * 4, 'fh5a', 'fat');
-            createHandle(machineX, startY + gapY * 4, 'fh5b', 'fat');
-            tubes.push({ id: 't5', handle1: 'fh5a', handle2: 'fh5b', color: '#e67e22' });
+            createHandle(bodyX, isMobile ? 280 : 340, 'fh6a', 'fat');
+            createHandle(machineX, isMobile ? 145 : 200, 'fh6b', 'fat');
+            tubes.push({ id: 't6', handle1: 'fh6a', handle2: 'fh6b', color: '#3498db', type: 'suction' });
 
-            createHandle(bodyX, bodyStartY + bodyGapY * 5, 'fh6a', 'fat');
-            createHandle(machineX, startY + gapY * 5, 'fh6b', 'fat');
-            tubes.push({ id: 't6', handle1: 'fh6a', handle2: 'fh6b', color: '#e67e22' });
+            // 2 tubes from MACHINE to CONTAINER (output - orange tubes)
+            createHandle(machineX + 20, isMobile ? 90 : 130, 'fh7a', 'fat');
+            createHandle(containerX, isMobile ? 70 : 100, 'fh7b', 'fat');
+            tubes.push({ id: 't7', handle1: 'fh7a', handle2: 'fh7b', color: '#e67e22', type: 'output' });
+
+            createHandle(machineX + 30, isMobile ? 120 : 170, 'fh8a', 'fat');
+            createHandle(containerX + 10, isMobile ? 110 : 150, 'fh8b', 'fat');
+            tubes.push({ id: 't8', handle1: 'fh8a', handle2: 'fh8b', color: '#e67e22', type: 'output' });
 
             updateTubes();
         }
 
         function startRejuvMode() {
             if (!uploadedImage) return;
-            currentMode = 'rejuv';
             resetAll();
+            currentMode = 'rejuv';
 
             const isMobile = window.innerWidth <= 768;
             const isSmallMobile = window.innerWidth <= 480;
@@ -1320,6 +1327,7 @@
             document.getElementById('progressBar').classList.remove('hidden');
             document.getElementById('progressFill').className = 'progress-fill rejuvenate';
             document.getElementById('affirmation').classList.remove('hidden');
+            document.getElementById('affirmation').textContent = rejuvAffirmations[0];
             document.getElementById('resetBtn').classList.remove('hidden');
 
             makeDraggable(document.getElementById('userImage'), updateTubes);
@@ -1369,12 +1377,13 @@
 
             let progress = 0;
             const progressFill = document.getElementById('progressFill');
-            const affirmation = document.getElementById('affirmation');
-            const fatLevel = document.getElementById('fatLevel');
+            const affirmationEl = document.getElementById('affirmation');
+            const fatLevelEl = document.getElementById('fatLevel');
             const machineScreen = document.getElementById('machineScreen');
             const userImage = document.getElementById('userImage');
 
-            affirmation.textContent = fatAffirmations[0];
+            // Set first fat affirmation
+            affirmationEl.textContent = fatAffirmations[0];
 
             animationInterval = setInterval(() => createParticle('fat'), 100);
 
@@ -1382,22 +1391,32 @@
                 progress += 1;
                 progressFill.style.width = progress + '%';
                 progressFill.textContent = progress + '%';
-                fatLevel.style.height = Math.min(progress * 0.8, 80) + '%';
+                // Update machine screen percentage
                 machineScreen.textContent = progress + '%';
 
-                if (progress % 10 === 0) {
-                    affirmation.textContent = fatAffirmations[Math.floor(progress / 10) % fatAffirmations.length];
+                // Update affirmation every 10%
+                if (progress % 10 === 0 && progress < 100) {
+                    const index = Math.floor(progress / 10);
+                    affirmationEl.textContent = fatAffirmations[index % fatAffirmations.length];
                 }
 
+                // Slim the body image
                 if (progress > 30) {
-                    userImage.style.transform = `scaleX(${Math.max(1 - (progress - 30) * 0.0025, 0.85)})`;
+                    userImage.style.transform = 'scaleX(' + Math.max(1 - (progress - 30) * 0.0025, 0.85) + ')';
                 }
 
+                // Complete
                 if (progress >= 100) {
                     clearInterval(progressInterval);
                     clearInterval(animationInterval);
                     document.getElementById('machineIndicator').classList.remove('active');
-                    affirmation.textContent = '🎉 שאיבת השומן הושלמה בהצלחה! 🎉';
+                    
+                    // Fill container completely with SOLID ORANGE at the END
+                    fatLevelEl.style.height = '100%';
+                    fatLevelEl.style.background = '#e67e22';
+                    fatLevelEl.style.boxShadow = '0 0 25px #e67e22';
+                    
+                    affirmationEl.textContent = '🎉 שאיבת השומן הושלמה בהצלחה! 🎉';
                     userImage.style.boxShadow = '0 0 30px rgba(212, 165, 116, 0.8)';
                     document.getElementById('saveBtn').disabled = false;
                     document.getElementById('startSimBtn').textContent = '✅ הושלם';
@@ -1430,7 +1449,7 @@
                 if (progress >= 100) {
                     clearInterval(progressInterval);
                     clearInterval(animationInterval);
-                    affirmation.textContent = '🎉 הפנים שלך קורנים באור חדש! 🎉';
+                    affirmation.textContent = '🎉 הפנים שלך קורנות באור חדש! 🎉';
                     userImage.style.boxShadow = '0 0 40px rgba(100, 200, 230, 0.8)';
                     document.getElementById('saveBtn').disabled = false;
                     document.getElementById('startSimBtn').textContent = '✅ הושלם';
@@ -1519,7 +1538,9 @@
             document.getElementById('progressFill').style.width = '0%';
             document.getElementById('progressFill').textContent = '0%';
 
-            document.getElementById('fatLevel').style.height = '0%';
+            document.getElementById('fatLevel').style.height = '0';
+            document.getElementById('fatLevel').style.boxShadow = 'none';
+            document.getElementById('fatLevel').style.background = '#e67e22';
             document.getElementById('machineScreen').textContent = '0%';
             document.getElementById('machineIndicator').classList.remove('active');
 
