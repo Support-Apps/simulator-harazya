@@ -1385,7 +1385,7 @@
             // Set first fat affirmation
             affirmationEl.textContent = fatAffirmations[0];
 
-            animationInterval = setInterval(() => createParticle('fat'), 100);
+            animationInterval = setInterval(() => createParticle('fat'), 150);
 
             const progressInterval = setInterval(() => {
                 progress += 1;
@@ -1422,7 +1422,7 @@
                     document.getElementById('startSimBtn').textContent = '✅ הושלם';
                     isSimulating = false;
                 }
-            }, 80);
+            }, 600);
         }
 
         function runRejuvSimulation() {
@@ -1433,18 +1433,18 @@
 
             affirmation.textContent = rejuvAffirmations[0];
 
-            animationInterval = setInterval(() => createParticle('rejuv'), 80);
+            animationInterval = setInterval(() => createParticle('rejuv'), 150);
 
             const progressInterval = setInterval(() => {
                 progress += 1;
                 progressFill.style.width = progress + '%';
                 progressFill.textContent = progress + '%';
 
-                if (progress % 10 === 0) {
+                if (progress % 10 === 0 && progress < 100) {
                     affirmation.textContent = rejuvAffirmations[Math.floor(progress / 10) % rejuvAffirmations.length];
                 }
 
-                userImage.style.filter = `brightness(${100 + progress * 0.25}%)`;
+                userImage.style.filter = 'brightness(' + (100 + progress * 0.25) + '%)';
 
                 if (progress >= 100) {
                     clearInterval(progressInterval);
@@ -1455,7 +1455,7 @@
                     document.getElementById('startSimBtn').textContent = '✅ הושלם';
                     isSimulating = false;
                 }
-            }, 80);
+            }, 600);
         }
 
         function createParticle(type) {
